@@ -1,7 +1,8 @@
 package com.yahoo.yuningj.todoapp;
 
-import android.support.v7.app.AppCompatActivity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -16,10 +17,12 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
+    private final int REQUEST_CODE = 20;
     ArrayList<String> toDoItems;
     ArrayAdapter<String> toDoAdapter;
     ListView lvItems;
     EditText toDoEdit;
+    int editPosition;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -37,6 +40,20 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
+        lvItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                onClick(i);
+                editPosition = i;
+            }
+        });
+}
+
+    public void onClick(int position) {
+        Intent i = new Intent(MainActivity.this, EditActivity.class);
+        String note = new String(toDoItems.get(position).toString());
+        i.putExtra("note", note);
+        startActivityForResult(i, REQUEST_CODE);
     }
 
     public void populateArrayItems() {
@@ -49,6 +66,19 @@ public class MainActivity extends AppCompatActivity {
         toDoAdapter.add(toDoEdit.getText().toString());
         toDoEdit.setText("");
         writeItems();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // REQUEST_CODE is defined above
+        if (resultCode == RESULT_OK && requestCode == REQUEST_CODE) {
+            // Extract name value from result extras
+            String name = data.getExtras().getString("editedNote");
+            // Toast the name to display temporarily on screen
+            toDoItems.set(editPosition, name);
+            toDoAdapter.notifyDataSetChanged();
+            writeItems();
+        }
     }
 
     private void readItems() {
